@@ -1,0 +1,4 @@
+
+
+el DTO (data transfer object) es para validar los datos que llegan del front
+
