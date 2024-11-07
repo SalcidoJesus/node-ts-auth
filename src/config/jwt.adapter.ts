@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { envs } from './envs'
 
-const JWT_SEED = envs.JWT_SEED
+export const JWT_SEED = envs.JWT_SEED
 
 export class JwtAdapter {
 
@@ -9,7 +9,7 @@ export class JwtAdapter {
 
 		return new Promise( ( resolve, _ ) => {
 
-			jwt.sign( payload, "SEED", { expiresIn: duration }, ( err, token ) => {
+			jwt.sign( payload, JWT_SEED, { expiresIn: duration }, ( err, token ) => {
 
 				if ( err ) {return resolve(null)
 
@@ -23,8 +23,15 @@ export class JwtAdapter {
 
 	static validateToken( token: string ) {
 
-		throw new Error('Method not implemented.')
-		return 'payload'
+		return new Promise( (resolve) => {
+
+			jwt.verify(token, JWT_SEED, (err, payload) => {
+
+				if ( err ) return resolve(null)
+
+				resolve(payload)
+			})
+		})
 
 	}
 

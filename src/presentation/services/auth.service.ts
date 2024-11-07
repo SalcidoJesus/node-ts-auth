@@ -1,12 +1,15 @@
-import { bcryptAdapter, JwtAdapter } from "../../config";
+import { bcryptAdapter, envs, JwtAdapter } from "../../config";
 import { UserModel } from "../../data/ index";
 import { CustomError, RegisterUserDto, UserEntity } from "../../domain";
 import { LoginUserDTO } from "../../domain/dtos/auth/login-user.dto";
+import { EmailService } from "./email.service";
 
 
 export class AuthService {
 
-	constructor() {}
+	constructor(
+		private readonly emailService: EmailService
+	) {}
 
 	public async registerUser(registerUserDto: RegisterUserDto) {
 
@@ -25,6 +28,9 @@ export class AuthService {
 			user.password = bcryptAdapter.hash(user.password)
 			// guardar
 			await user.save()
+
+			// enviar correo
+			this.sendEmailValidationLink( user.email )
 
 			// JWT
 
@@ -77,5 +83,58 @@ export class AuthService {
 
 
 	}
+
+	private sendEmailValidationLink = async (email: string) => {
+
+		const token = await JwtAdapter.generateToken({
+			email
+		});
+
+		if ( !token ) throw CustomError.internalServer('No se pudo generar el token');
+
+		const link = `${envs.WEB_SERVICE_URL}/auth/validate-email/${token}`
+
+		const htmlbody = `
+		<h1>Validación de correo</h1>
+
+		<p>Para validar tu correo, haz click en el siguiente enlace:</p>
+		<a href="${link}">Validar correo</a>
+		`
+
+		const options = {
+			to: email,
+			subject: 'Validación de correo',
+			htmlbody
+		}
+
+		const isSet = await this.emailService.sendEmail(options);
+		if ( !isSet ) throw CustomError.internalServer('No se pudo enviar el correo');
+
+		return true;
+
+	}
+
+	public validateEmail = async ( token: string ) => {
+
+		const payload = await JwtAdapter.validateToken(token);
+		console.log({payload})
+
+		if ( !payload ) throw CustomError.unauthorized('No se pudo validar el token');
+
+		const { email } = payload as { email: string };
+
+		if ( !email ) throw CustomError.internalServer('No hay un correo en el token');
+
+		const existUser = await UserModel.findOne({ email });
+
+		if ( !existUser ) throw CustomError.internalServer('Este correo no existe');
+
+		existUser.emailValidated = true;
+		await existUser.save();
+
+		return true;
+
+	}
+
 }
 
