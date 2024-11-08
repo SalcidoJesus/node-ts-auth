@@ -1,7 +1,7 @@
 
 // crud
 
-import { CategoryModel } from "../../data/ index";
+import { CategoryModel } from "../../data";
 import { CreateCategoryDto, CustomError, PaginationDTO, UserEntity } from "../../domain";
 
 
