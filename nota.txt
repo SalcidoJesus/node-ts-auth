@@ -2,3 +2,9 @@
 
 el DTO (data transfer object) es para validar los datos que llegan del front
 
+en presentation están las cosas más cercanas al front, como express, los middlewares y las respuestas
+
+data pues la BD y los modelos
+
+config pues las librerías, como las variables de entorno, los adaptadores, etc.
+
